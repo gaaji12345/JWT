@@ -3,12 +3,14 @@ package com.example.JWTGaaji.api;/*  gaajiCode
     18/09/2024
     */
 
+import com.example.JWTGaaji.dto.AuthResponceDTO;
 import com.example.JWTGaaji.dto.LoginDto;
 import com.example.JWTGaaji.dto.RegisterDto;
 import com.example.JWTGaaji.entity.Roles;
 import com.example.JWTGaaji.entity.UserE;
 import com.example.JWTGaaji.repo.RoleRepo;
 import com.example.JWTGaaji.repo.UserRepo;
+import com.example.JWTGaaji.security.JWTGenarator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,27 +34,28 @@ public class AuthController {
     private UserRepo userRepository;
     private RoleRepo roleRepository;
     private PasswordEncoder passwordEncoder;
-   // private JWTGenerator jwtGenerator;
+    private JWTGenarator jwtGenerator;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, UserRepo userRepository,
-                          RoleRepo roleRepository, PasswordEncoder passwordEncoder) {
+                          RoleRepo roleRepository, PasswordEncoder passwordEncoder,JWTGenarator jwtGenarator) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtGenerator=jwtGenarator;
 
     }
 
 
     @PostMapping("login")
-    public ResponseEntity<String> login(@RequestBody LoginDto loginDto){
+    public ResponseEntity<AuthResponceDTO> login(@RequestBody LoginDto loginDto){
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDto.getUsername(),
                         loginDto.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("User Signed Success", HttpStatus.OK);
+        String token = jwtGenerator.generateToken(authentication);
+        return new ResponseEntity<>(new AuthResponceDTO(token), HttpStatus.OK);
     }
     @PostMapping("register")
     public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
